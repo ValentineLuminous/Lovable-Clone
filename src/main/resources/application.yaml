@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: Lovable
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lovable
+    username: postgres
+    password: Diwakar@1802
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
