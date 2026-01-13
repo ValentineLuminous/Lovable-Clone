@@ -2,6 +2,7 @@ package com.BlueFlare.Lovable.security;
 
 
 import com.BlueFlare.Lovable.entity.User;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,12 +10,14 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 
 @Component
 public class AuthUtil {
 
-    @Value("$(jwt-secret-key")
+    @Value("${jwt.secret-key}")
+
     private String jwtSecretKey;
 
 
@@ -30,5 +33,17 @@ public class AuthUtil {
                 .setExpiration(new Date(System.currentTimeMillis()+1000*60*10))
                 .signWith(getSecretKey())
                 .compact();
+    }
+
+    public JwtUserPrincipal verifyAccessToken(String token){
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSecretKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        Long userId = Long.parseLong(claims.get("userId", String.class));
+        String username = claims.getSubject();
+
+        return new JwtUserPrincipal(userId, username, new ArrayList<>());
     }
 }
