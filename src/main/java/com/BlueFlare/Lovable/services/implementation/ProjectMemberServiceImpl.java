@@ -11,6 +11,7 @@ import com.BlueFlare.Lovable.mapper.ProjectMemberMapper;
 import com.BlueFlare.Lovable.repository.ProjectMemberRepository;
 import com.BlueFlare.Lovable.repository.ProjectRepository;
 import com.BlueFlare.Lovable.repository.UserRepository;
+import com.BlueFlare.Lovable.security.AuthUtil;
 import com.BlueFlare.Lovable.services.ProjectMemberService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -31,10 +32,12 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     ProjectMemberRepository projectMemberRepository;
     ProjectMemberMapper projectMemberMapper;
     UserRepository userRepository;
+    AuthUtil authUtil;
 
     @Override
-    public List<MemberResponse> getProjectMembers(Long projectId, Long userId) {
+    public List<MemberResponse> getProjectMembers(Long projectId) {
 
+        Long userId = authUtil.getCurrentUserId();
         Project project = getAccessibleProjectById(projectId,userId);
         return projectMemberRepository.findByIdProjectId(projectId)
                 .stream()
@@ -43,7 +46,9 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
-    public MemberResponse inviteMember(Long projectId, InviteMemberrequest request, Long userId) {
+    public MemberResponse inviteMember(Long projectId, InviteMemberrequest request) {
+
+        Long userId = authUtil.getCurrentUserId();
         Project project = getAccessibleProjectById(projectId, userId);
 
 //        if(!project.getOwner().getId().equals(userId)){
@@ -74,8 +79,9 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
-    public MemberResponse updateMemberRole(Long projectId, Long memberId, UpdateMemberRoleRequest request, Long userId) {
+    public MemberResponse updateMemberRole(Long projectId, Long memberId, UpdateMemberRoleRequest request) {
 
+        Long userId = authUtil.getCurrentUserId();
         Project project = getAccessibleProjectById(projectId, userId);
 
 //        if(!project.getOwner().getId().equals(userId)){
@@ -93,8 +99,9 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
-    public void  removeProjectMember(Long projectId, Long memberId, UpdateMemberRoleRequest request, Long userId) {
+    public void  removeProjectMember(Long projectId, Long memberId, UpdateMemberRoleRequest request) {
 
+        Long userId = authUtil.getCurrentUserId();
         Project project = getAccessibleProjectById(projectId, userId);
 
 //        if(!project.getOwner().getId().equals(userId)){

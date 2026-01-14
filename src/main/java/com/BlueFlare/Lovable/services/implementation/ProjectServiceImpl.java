@@ -13,6 +13,7 @@ import com.BlueFlare.Lovable.mapper.ProjectMapper;
 import com.BlueFlare.Lovable.repository.ProjectMemberRepository;
 import com.BlueFlare.Lovable.repository.ProjectRepository;
 import com.BlueFlare.Lovable.repository.UserRepository;
+import com.BlueFlare.Lovable.security.AuthUtil;
 import com.BlueFlare.Lovable.services.ProjectService;
 import jakarta.transaction.Transactional;
 import lombok.NoArgsConstructor;
@@ -32,11 +33,11 @@ public class ProjectServiceImpl implements ProjectService {
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
     private final ProjectMemberRepository projectMemberRepository;
-
+    private final AuthUtil authUtil;
 
     @Override
-    public List<ProjectSummaryResponse> getUserProjects(Long userId) {
-
+    public List<ProjectSummaryResponse> getUserProjects() {
+          Long userId = authUtil.getCurrentUserId();
 //        return projectRepository.findAllAccessibleByUser(userId)
 //                .stream()
 //                .map(projectMapper::toProjectSummaryResponse)
@@ -47,7 +48,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponse getUserProjectById(Long id, Long userId) {
+    public ProjectResponse getUserProjectById(Long id) {
+        Long userId = authUtil.getCurrentUserId();
 
         Project project = getAccessibleProject(id, userId);
         return projectMapper.toProjectResponse(project);
@@ -55,11 +57,18 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponse createProject(ProjectRequest request, Long userId) {
+    public ProjectResponse createProject(ProjectRequest request) {
 
-        User owner = userRepository.findById(userId).orElseThrow(
-                () -> new ResourceNotFoundException("User", userId.toString())
-        );
+        Long userId = authUtil.getCurrentUserId();
+
+//        This is making db call which is not required at this point of time
+//        User owner = userRepository.findById(userId).orElseThrow(
+//                () -> new ResourceNotFoundException("User", userId.toString())
+//        );
+
+
+        //This is not making any db call
+        User owner = userRepository.getReferenceById(userId);
 
         Project project = Project.builder()
                 .name(request.name())
@@ -82,8 +91,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponse updateProject(Long id, ProjectRequest request, Long userId) {
+    public ProjectResponse updateProject(Long id, ProjectRequest request) {
 
+        Long userId = authUtil.getCurrentUserId();
         Project project = getAccessibleProject(id, userId);
 
 //        if(!project.getOwner().getId().equals(userId)){
@@ -95,7 +105,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void softDelete(Long id, Long userId) {
+    public void softDelete(Long id) {
+        Long userId = authUtil.getCurrentUserId();
         Project project = getAccessibleProject(id, userId);
 //        if(!project.getOwner().getId().equals(userId)){
 //            throw new RuntimeException("You are not allowed to delete");
