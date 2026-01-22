@@ -18,6 +18,7 @@ import com.BlueFlare.Lovable.services.ProjectService;
 import jakarta.transaction.Transactional;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 
@@ -48,6 +49,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @PreAuthorize("@security.canViewProject(#id)") //here we're using SpEL(spring Expression Language) not normal java for preauthorizing
     public ProjectResponse getUserProjectById(Long id) {
         Long userId = authUtil.getCurrentUserId();
 
@@ -91,10 +93,11 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponse updateProject(Long id, ProjectRequest request) {
+    @PreAuthorize("@security.canEditProject(#projectId)")
+    public ProjectResponse updateProject(Long projectId, ProjectRequest request) {
 
         Long userId = authUtil.getCurrentUserId();
-        Project project = getAccessibleProject(id, userId);
+        Project project = getAccessibleProject(projectId, userId);
 
 //        if(!project.getOwner().getId().equals(userId)){
 //            throw new RuntimeException("You are not allowed to update the project");
@@ -105,9 +108,10 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void softDelete(Long id) {
+    @PreAuthorize("@security.canDeleteProject(#projectId)")
+    public void softDelete(Long projectId) {
         Long userId = authUtil.getCurrentUserId();
-        Project project = getAccessibleProject(id, userId);
+        Project project = getAccessibleProject(projectId, userId);
 //        if(!project.getOwner().getId().equals(userId)){
 //            throw new RuntimeException("You are not allowed to delete");
 //        }
