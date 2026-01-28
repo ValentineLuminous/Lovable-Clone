@@ -1,8 +1,12 @@
 package com.BlueFlare.Lovable.error;
 
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -41,4 +45,38 @@ public class GlobalExceptionHandler {
         log.error(apiError.toString(), ex);
         return ResponseEntity.status(apiError.status()).body(apiError);
     }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiError> handleUsernameNotFoundException(UsernameNotFoundException ex){
+        ApiError apiError = new ApiError(HttpStatus.NOT_FOUND, "Username not Found with this username: " + ex.getMessage());
+        log.error(apiError.toString(),ex);
+
+        return ResponseEntity.status(apiError.status()).body(apiError);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthenticationException(UsernameNotFoundException ex){
+        ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, "Authentication Failed " + ex.getMessage());
+        log.error(apiError.toString(),ex);
+
+        return ResponseEntity.status(apiError.status()).body(apiError);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ApiError> handleJwtException(UsernameNotFoundException ex){
+        ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, "Invalid JWT Token" + ex.getMessage());
+        log.error(apiError.toString(),ex);
+
+        return ResponseEntity.status(apiError.status()).body(apiError);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDeniedException(UsernameNotFoundException ex){
+        ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, "Access Denied: Insufficient permission " + ex.getMessage());
+        log.error(apiError.toString(),ex);
+
+        return ResponseEntity.status(apiError.status()).body(apiError);
+    }
+
+
 }
