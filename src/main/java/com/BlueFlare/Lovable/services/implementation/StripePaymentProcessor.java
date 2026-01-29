@@ -5,15 +5,15 @@ import com.BlueFlare.Lovable.dto.subscription.CheckoutResponse;
 import com.BlueFlare.Lovable.dto.subscription.PortalReponse;
 import com.BlueFlare.Lovable.entity.Plan;
 import com.BlueFlare.Lovable.entity.User;
+import com.BlueFlare.Lovable.enums.SubscriptionStatus;
 import com.BlueFlare.Lovable.error.ResourceNotFoundException;
 import com.BlueFlare.Lovable.repository.PlanRepository;
 import com.BlueFlare.Lovable.repository.UserRepository;
 import com.BlueFlare.Lovable.security.AuthUtil;
 import com.BlueFlare.Lovable.services.PaymentProcessor;
+import com.BlueFlare.Lovable.services.SubscriptionService;
 import com.stripe.exception.StripeException;
-import com.stripe.model.Invoice;
-import com.stripe.model.StripeObject;
-import com.stripe.model.Subscription;
+import com.stripe.model.*;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Map;
 
 @Service
@@ -33,6 +34,7 @@ public class StripePaymentProcessor implements PaymentProcessor {
     private final AuthUtil authUtil;
     private final PlanRepository planRepository;
     private final UserRepository userRepository;
+    private final SubscriptionService subscriptionService;
 
     @Override
     public CheckoutResponse createCheckOutSessionUrl(CheckoutRequest checkoutRequest) {
@@ -102,6 +104,10 @@ public class StripePaymentProcessor implements PaymentProcessor {
 
     private void handleCheckoutSessionCompleted(Session session, Map<String, String> metadata){
 
+        if(session==null){
+            log.error("session object was null");
+            return;
+        }
         Long userId = Long.parseLong(metadata.get("user_id"));
         Long planId = Long.parseLong(metadata.get("plan_id"));
 
@@ -114,23 +120,115 @@ public class StripePaymentProcessor implements PaymentProcessor {
             user.setStripeCustomerId(customerId);
             userRepository.save(user);
         }
+
+        subscriptionService.activateSubscription(userId, planId, subscriptionId, customerId);
     }
 
     private void handleCustomerSubscriptionUpdated(Subscription subscription){
 
+        if(subscription==null){
+            log.error("Subscription object was null");
+            return;
+        }
+
+        SubscriptionStatus status = mapStripeStatusToEnums(subscription.getStatus());
+        if(status==null){
+            log.warn("Unknown status '{}' for subscription {} ", subscription.getStatus(), subscription.getId());
+            return;
+        }
+
+        SubscriptionItem item = subscription.getItems().getData().get(0);
+        Instant periodStart = toInstant(item.getCurrentPeriodStart());
+        Instant periodEnd = toInstant(item.getCurrentPeriodEnd());
+
+        Long planId = resolvePlanId(item.getPrice());
+
+        subscriptionService.updateSubscription(
+                subscription.getId(), status, periodStart, periodEnd,
+                subscription.getCancelAtPeriodEnd(), planId
+        );
     }
+
+
     private void handleCustomerSubscriptionDeleted(Subscription subscription){
+
+        if(subscription==null){
+            log.error("Subscription object was null");
+            return;
+        }
+
+        subscriptionService.cancelSubscription(subscription.getId());
 
     }
     private void handleInvoicePaid(Invoice invoice){
+        String subId = extractSubscriptionId(invoice);
 
+        if(subId==null) return;
+        try {
+            Subscription subscription = Subscription.retrieve(subId);
+
+            var item = subscription.getItems().getData().get(0);
+            Instant periodStart = toInstant(item.getCurrentPeriodStart());
+            Instant periodEnd = toInstant(item.getCurrentPeriodEnd());
+
+            subscriptionService.renewSubscriptionPeriod(
+                    subId,
+                    periodStart,
+                    periodEnd
+            );
+        } catch (StripeException e){
+            throw new RuntimeException(e);
+        }
     }
     private void handleInvoicePaymentFailed(Invoice invoice){
+
+        String subId = extractSubscriptionId(invoice);
+        if(subId == null) return;
+
+        subscriptionService.markSubscriptionPastDue(subId);
 
     }
 
     private User getUser(Long userId){
         return userRepository.findById(userId).orElseThrow(()->
                 new ResourceNotFoundException("user", userId.toString()));
+    }
+
+    private SubscriptionStatus mapStripeStatusToEnums(String status) {
+        return switch (status) {
+            case "active" ->SubscriptionStatus.ACTIVE;
+            case "trialing" -> SubscriptionStatus.TRAILING;
+            case "past_due", "unpaid", "paused", "incomplete_expired" -> SubscriptionStatus.PAST_ONE;
+            case "cancelled" -> SubscriptionStatus.CANCELLED;
+            case "incomplete" -> SubscriptionStatus.INCOMPLETE;
+            default -> {
+                log.warn("Unmapped Stripe status: {}", status);
+                yield null;
+            }
+        };
+
+    }
+
+    private Instant toInstant(Long epoch) {
+
+        return epoch!=null ? Instant.ofEpochSecond(epoch) : null;
+    }
+
+    private Long resolvePlanId(Price price) {
+
+        if(price==null || price.getId()==null) return null;
+        return planRepository.findByStripePriceId(price.getId())
+                .map(Plan::getId)
+                .orElse(null);
+    }
+
+    private String extractSubscriptionId(Invoice invoice) {
+        var parent = invoice.getParent();
+        if(parent==null) return null;
+
+        var subDetails = parent.getSubscriptionDetails();
+        if(subDetails==null) return null;
+
+        return subDetails.getSubscription();
     }
 }
