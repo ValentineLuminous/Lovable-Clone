@@ -10,7 +10,7 @@ import java.util.Map;
 public interface PaymentProcessor {
     CheckoutResponse createCheckOutSessionUrl(CheckoutRequest checkoutRequest);
 
-    PortalReponse openCustomerPortal(Long userId);
+    PortalReponse openCustomerPortal();
 
     void handleWebHook(String type, StripeObject stripeObject, Map<String, String> metadata);
 }
