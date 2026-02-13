@@ -8,6 +8,7 @@ import com.BlueFlare.Lovable.entity.ProjectMember;
 import com.BlueFlare.Lovable.entity.ProjectMemberId;
 import com.BlueFlare.Lovable.entity.User;
 import com.BlueFlare.Lovable.enums.ProjectRole;
+import com.BlueFlare.Lovable.error.BadRequestException;
 import com.BlueFlare.Lovable.error.ResourceNotFoundException;
 import com.BlueFlare.Lovable.mapper.ProjectMapper;
 import com.BlueFlare.Lovable.repository.ProjectMemberRepository;
@@ -15,6 +16,7 @@ import com.BlueFlare.Lovable.repository.ProjectRepository;
 import com.BlueFlare.Lovable.repository.UserRepository;
 import com.BlueFlare.Lovable.security.AuthUtil;
 import com.BlueFlare.Lovable.services.ProjectService;
+import com.BlueFlare.Lovable.services.SubscriptionService;
 import jakarta.transaction.Transactional;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMapper projectMapper;
     private final ProjectMemberRepository projectMemberRepository;
     private final AuthUtil authUtil;
+    private final SubscriptionService subscriptionService;
 
     @Override
     public List<ProjectSummaryResponse> getUserProjects() {
@@ -61,6 +64,11 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse createProject(ProjectRequest request) {
 
+
+        if(subscriptionService.canCreateNewProject()){
+            throw new BadRequestException("user cannot create a new project with current , please upgrade the plan now");
+        }
+
         Long userId = authUtil.getCurrentUserId();
 
 //        This is making db call which is not required at this point of time
@@ -71,6 +79,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         //This is not making any db call
         User owner = userRepository.getReferenceById(userId);
+
+
 
         Project project = Project.builder()
                 .name(request.name())

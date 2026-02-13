@@ -6,6 +6,7 @@ import com.BlueFlare.Lovable.dto.subscription.PortalReponse;
 import com.BlueFlare.Lovable.entity.Plan;
 import com.BlueFlare.Lovable.entity.User;
 import com.BlueFlare.Lovable.enums.SubscriptionStatus;
+import com.BlueFlare.Lovable.error.BadRequestException;
 import com.BlueFlare.Lovable.error.ResourceNotFoundException;
 import com.BlueFlare.Lovable.repository.PlanRepository;
 import com.BlueFlare.Lovable.repository.UserRepository;
@@ -66,6 +67,21 @@ public class StripePaymentProcessor implements PaymentProcessor {
                 .putMetadata("user_id", userId.toString())
                 .putMetadata("plan_id",plan.getId().toString());
 
+//
+//        var params = SessionCreateParams.builder()
+//                .addLineItem(
+//                        SessionCreateParams.LineItem.builder()
+//                                .setPrice(plan.getStripePriceId())
+//                                .setQuantity(1L)
+//                                .build()
+//                )
+//                .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+//                .setSuccessUrl(frontendUrl + "/success.html?session_id={CHECKOUT_SESSION_ID}")
+//                .setCancelUrl(frontendUrl + "/cancel.html")
+//                .putMetadata("user_id", userId.toString())
+//                .putMetadata("plan_id", plan.getId().toString());
+
+
         try {
             String stripeCustomerId = user.getStripeCustomerId();
             if(stripeCustomerId==null || stripeCustomerId.isEmpty()){
@@ -83,7 +99,28 @@ public class StripePaymentProcessor implements PaymentProcessor {
 
     @Override
     public PortalReponse openCustomerPortal() {
-        return null;
+        Long userId = authUtil.getCurrentUserId();
+
+        User user = getUser(userId);
+        String stripeCustomerId = user.getStripeCustomerId();
+
+        if(stripeCustomerId == null || stripeCustomerId.isEmpty()){
+            throw new BadRequestException("User doesn't have a stripe customer id");
+        }
+
+        try {
+            var portalSession = com.stripe.model.billingportal.Session.create(
+                    com.stripe.param.billingportal.SessionCreateParams.builder()
+                            .setCustomer(stripeCustomerId)
+                            .setReturnUrl(frontendUrl)
+                            .build()
+
+            );
+            return new PortalReponse((portalSession.getUrl()));
+
+        } catch (StripeException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

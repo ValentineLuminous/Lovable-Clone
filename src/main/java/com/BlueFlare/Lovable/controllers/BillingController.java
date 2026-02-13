@@ -67,6 +67,9 @@ public class BillingController {
             @RequestBody String payload,
             @RequestHeader("Stripe-Signature") String signHeader
     ){
+
+        log.info("Webhook received: {}");
+
         try {
             Event event = Webhook.constructEvent(payload, signHeader, webHookSecret);
             EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
