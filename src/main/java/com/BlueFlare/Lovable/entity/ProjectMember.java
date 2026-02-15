@@ -28,7 +28,7 @@ public class ProjectMember {
     User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false)
     ProjectRole role;
 
     Instant invitedAt;

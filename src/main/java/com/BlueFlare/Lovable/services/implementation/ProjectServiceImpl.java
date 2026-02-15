@@ -18,7 +18,6 @@ import com.BlueFlare.Lovable.security.AuthUtil;
 import com.BlueFlare.Lovable.services.ProjectService;
 import com.BlueFlare.Lovable.services.SubscriptionService;
 import jakarta.transaction.Transactional;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -65,7 +64,7 @@ public class ProjectServiceImpl implements ProjectService {
     public ProjectResponse createProject(ProjectRequest request) {
 
 
-        if(subscriptionService.canCreateNewProject()){
+        if(!subscriptionService.canCreateNewProject()){
             throw new BadRequestException("user cannot create a new project with current , please upgrade the plan now");
         }
 
