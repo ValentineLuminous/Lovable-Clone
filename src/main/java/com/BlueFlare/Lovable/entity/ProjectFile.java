@@ -2,6 +2,7 @@ package com.BlueFlare.Lovable.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
@@ -14,6 +15,7 @@ import java.time.Instant;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Builder
 public class ProjectFile {
 
     @Id
@@ -34,6 +36,4 @@ public class ProjectFile {
 
     @UpdateTimestamp
     Instant updatedAt;
-
-
 }
