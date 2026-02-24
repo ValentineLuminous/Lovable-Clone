@@ -6,7 +6,10 @@ import com.BlueFlare.Lovable.dto.subscription.PlanLimitResponse;
 
 
 public interface UsageService {
-    UsageTodayResponse getTodayUsage(Long userId);
+//    UsageTodayResponse getTodayUsage(Long userId);
+//
+//    PlanLimitResponse getCurrentSubscriptionLimitsOfUser(Long userId);
 
-    PlanLimitResponse getCurrentSubscriptionLimitsOfUser(Long userId);
+    void recordTokenUsage(Long userId, int actualTokens);
+    void checkDailyTokensUsage();
 }
