@@ -2,6 +2,7 @@ package com.BlueFlare.Lovable.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
 import java.util.Set;
 
 @RequiredArgsConstructor

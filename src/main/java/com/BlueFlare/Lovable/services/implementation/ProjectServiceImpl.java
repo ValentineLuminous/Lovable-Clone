@@ -16,12 +16,12 @@ import com.BlueFlare.Lovable.repository.ProjectRepository;
 import com.BlueFlare.Lovable.repository.UserRepository;
 import com.BlueFlare.Lovable.security.AuthUtil;
 import com.BlueFlare.Lovable.services.ProjectService;
+import com.BlueFlare.Lovable.services.ProjectTemplateService;
 import com.BlueFlare.Lovable.services.SubscriptionService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-
 
 import java.time.Instant;
 import java.util.List;
@@ -37,27 +37,25 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMemberRepository projectMemberRepository;
     private final AuthUtil authUtil;
     private final SubscriptionService subscriptionService;
+    private final ProjectTemplateService projectTemplateService;
 
     @Override
     public List<ProjectSummaryResponse> getUserProjects() {
-          Long userId = authUtil.getCurrentUserId();
-//        return projectRepository.findAllAccessibleByUser(userId)
-//                .stream()
-//                .map(projectMapper::toProjectSummaryResponse)
-//                .collect(Collectors.toList());
-
-        var projects = projectRepository.findAllAccessibleByUser(userId);
-        return projectMapper.toListOfProjectSummaryResponse(projects);
+        Long userId = authUtil.getCurrentUserId();
+        var projectsWithRoles = projectRepository.findAllAccessibleByUser(userId);
+        return projectsWithRoles.stream()
+                .map(p -> projectMapper.toProjectSummaryResponse(p.getProject(), p.getRole()))
+                .toList();
     }
 
     @Override
     @PreAuthorize("@security.canViewProject(#id)") //here we're using SpEL(spring Expression Language) not normal java for preauthorizing
-    public ProjectResponse getUserProjectById(Long id) {
+    public ProjectSummaryResponse getUserProjectById(Long projectId) {
         Long userId = authUtil.getCurrentUserId();
+        var projectWithRole = projectRepository.findAccessibleProjectByIdWithRole(projectId, userId)
+                .orElseThrow(() -> new BadRequestException("Project Not Found"));
 
-        Project project = getAccessibleProject(id, userId);
-        return projectMapper.toProjectResponse(project);
-
+        return projectMapper.toProjectSummaryResponse(projectWithRole.getProject(), projectWithRole.getRole());
     }
 
     @Override
@@ -98,6 +96,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .build();
 
         projectMemberRepository.save(projectMember);
+        projectTemplateService.initializeProjectFromTemplate(project.getId());
         return projectMapper.toProjectResponse(project);
     }
 

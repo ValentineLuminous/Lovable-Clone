@@ -1,7 +1,6 @@
 package com.BlueFlare.Lovable.security;
 
 import com.BlueFlare.Lovable.enums.ProjectPermission;
-import com.BlueFlare.Lovable.enums.ProjectRole;
 import com.BlueFlare.Lovable.repository.ProjectMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

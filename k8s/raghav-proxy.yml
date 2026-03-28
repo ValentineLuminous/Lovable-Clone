@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raghav-proxy
+  namespace: raghav-apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: raghav-proxy
+  template:
+    metadata:
+      labels:
+        app: raghav-proxy
+    spec:
+      containers:
+        - name: proxy
+          image: raghav-proxy:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+          env:
+            - name: REDIS_URL
+              # Refers to the service in the same namespace
+              value: "redis://redis-service:6379"
+#          env:
+#            - name: SPRING_DATA_REDIS_HOST
+#              value: "redis-service"
+#            - name: SPRING_DATA_REDIS_PORT
+#              value: "6379"
+          ports:
+            - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: raghav-proxy-svc
+  namespace: raghav-apps
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: raghav-proxy

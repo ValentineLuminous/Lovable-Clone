@@ -1,6 +1,5 @@
 package com.BlueFlare.Lovable.controllers;
 
-import com.BlueFlare.Lovable.dto.subscription.PlanLimitResponse;
 import com.BlueFlare.Lovable.dto.subscription.UsageTodayResponse;
 import com.BlueFlare.Lovable.services.UsageService;
 import lombok.RequiredArgsConstructor;

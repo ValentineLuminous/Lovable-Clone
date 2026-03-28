@@ -1,10 +1,7 @@
 package com.BlueFlare.Lovable.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -16,6 +13,8 @@ import java.time.Instant;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProjectFile {
 
     @Id

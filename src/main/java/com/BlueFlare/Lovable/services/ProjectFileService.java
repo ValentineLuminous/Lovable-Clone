@@ -1,12 +1,10 @@
 package com.BlueFlare.Lovable.services;
 
 import com.BlueFlare.Lovable.dto.project.FileContentResponse;
-import com.BlueFlare.Lovable.dto.project.FileNode;
-
-import java.util.List;
+import com.BlueFlare.Lovable.dto.project.FileTreeResponse;
 
 public interface ProjectFileService {
-    List<FileNode> getFileTree(Long projectId);
+    FileTreeResponse getFileTree(Long projectId);
 
     FileContentResponse getFileContent(Long projectId, String path);
 

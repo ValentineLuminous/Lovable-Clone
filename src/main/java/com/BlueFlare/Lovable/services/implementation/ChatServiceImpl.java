@@ -11,7 +11,6 @@ import com.BlueFlare.Lovable.security.AuthUtil;
 import com.BlueFlare.Lovable.services.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.BlueFlare.Lovable.dto.chat.ChatResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

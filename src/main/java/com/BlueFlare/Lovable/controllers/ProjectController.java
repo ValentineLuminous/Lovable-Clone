@@ -1,13 +1,13 @@
 package com.BlueFlare.Lovable.controllers;
 
+import com.BlueFlare.Lovable.dto.deploy.DeployResponse;
 import com.BlueFlare.Lovable.dto.project.ProjectRequest;
 import com.BlueFlare.Lovable.dto.project.ProjectResponse;
 import com.BlueFlare.Lovable.dto.project.ProjectSummaryResponse;
-import com.BlueFlare.Lovable.security.AuthUtil;
+import com.BlueFlare.Lovable.services.DeploymentService;
 import com.BlueFlare.Lovable.services.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +20,7 @@ import java.util.List;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final DeploymentService deploymentService;
 
 
     @GetMapping()
@@ -29,7 +30,7 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProjectResponse> getProjectById(@PathVariable Long id){
+    public ResponseEntity<ProjectSummaryResponse> getProjectById(@PathVariable Long id){
 
         return ResponseEntity.ok(projectService.getUserProjectById(id));
     }
@@ -52,5 +53,12 @@ public class ProjectController {
         projectService.softDelete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/deploy")
+    public ResponseEntity<DeployResponse> deployProject(@PathVariable Long id) {
+        return ResponseEntity.ok(deploymentService.deploy(id));
+    }
+
+
 }
 

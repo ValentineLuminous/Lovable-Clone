@@ -26,10 +26,9 @@ public class ProjectTemplateServiceImpl implements ProjectTemplateService {
     private final ProjectRepository projectRepository;
 
 
-//    Need to setup template on minIO
     private static final String TEMPLATE_BUCKET = "starter-projects";
     private static final String TARGET_BUCKET = "lovable-clone-bucket";
-    private static final String TEMPLATE_NAME = "react-vite-tailwind-daisyui-starter";
+    private static final String TEMPLATE_NAME = "react_vite_tailwind_daisyui_starter";
 
 
     @Override

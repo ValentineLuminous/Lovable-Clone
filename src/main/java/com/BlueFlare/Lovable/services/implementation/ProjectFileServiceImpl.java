@@ -17,19 +17,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.List;
-
-
-import java.net.URLConnection;
 import java.util.List;
 
 
@@ -51,11 +44,12 @@ public class ProjectFileServiceImpl implements ProjectFileService {
    private static final String BUCKET_NAME = "lovable-clone-bucket";
 
     @Override
-    public List<FileNode> getFileTree(Long projectId) {
+    public FileTreeResponse getFileTree(Long projectId) {
 
         List<ProjectFile> projectFileList = projectFileRepository.findByProjectId(projectId);
-        return projectFileMapper.toListOfFileNode(projectFileList);
+        List<FileNode> projectFileNodes =  projectFileMapper.toListOfFileNode(projectFileList);
 
+        return new FileTreeResponse(projectFileNodes);
     }
 
     @Override

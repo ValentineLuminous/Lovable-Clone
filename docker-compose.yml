@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: lovable_postgres
+    environment:
+      POSTGRES_DB: lovable
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Diwakar@1802
+      TZ: Asia/Kolkata
+      PGTZ: Asia/Kolkata
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - lovable-network
+
+  minio:
+    image: minio/minio
+    container_name: lovable_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - lovable-network
+
+  app:
+    build: .
+    container_name: lovable_app
+    depends_on:
+      - postgres
+      - minio
+    ports:
+      - "8080:8080"
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lovable
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: Diwakar@1802
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+    networks:
+      - lovable-network
+
+networks:
+  lovable-network:
+    driver: bridge
+volumes:
+  pgdata:
+  minio_data:

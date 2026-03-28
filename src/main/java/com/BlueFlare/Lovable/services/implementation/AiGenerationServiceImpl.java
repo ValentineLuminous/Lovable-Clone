@@ -17,16 +17,15 @@ import com.BlueFlare.Lovable.services.UsageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
-import org.springframework.ai.chat.metadata.Usage;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
@@ -101,7 +100,7 @@ public class AiGenerationServiceImpl implements AiGenerationService {
                         finalizeChats(userMessage, chatSession, fullResponseBuffer.toString(), duration, usageRef.get());
                     });
                 })
-                .doOnError(error -> log.error("Error during streaming for projectId: {}", projectId))
+                .doOnError(error -> log.error("Streaming failed for projectId: {}", projectId, error))
                 .map(response -> {
                     String text = response.getResult().getOutput().getText();
                     return new StreamResponse(text != null ? text : "");
